@@ -1,5 +1,6 @@
 package com.jmerilai19.reminderapp.ui.profile
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,26 +28,24 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.jmerilai19.reminderapp.ui.theme.CardColor
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun Profile(navController: NavController) {
     Surface(modifier = Modifier.fillMaxSize()) {
-
-        ScaffoldWithBottomMenu(navController)
-
-    }
-}
-
-@Composable
-fun ScaffoldWithBottomMenu(navController: NavController) {
-    Scaffold(bottomBar = {BottomBar(navController)}
-    ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(15.dp),
-        horizontalArrangement = Arrangement.SpaceBetween){
-            Text(text = "Log out", modifier = Modifier.clickable { navController.navigate("login") })
-            Text(text = "Edit", modifier = Modifier.clickable {  })
+        Scaffold(
+            bottomBar = { BottomBar(navController) },
+            topBar = { TopBar() }
+        ) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp),
+                horizontalArrangement = Arrangement.SpaceBetween){
+                Text(text = "Log out", modifier = Modifier.clickable { navController.navigate("login") })
+                Text(text = "Edit", modifier = Modifier.clickable {  })
+            }
+            //content area
+            CreateInfo()
         }
-        //content area
-        CreateInfo()
     }
 }
 
@@ -54,7 +53,8 @@ fun ScaffoldWithBottomMenu(navController: NavController) {
 private fun CreateInfo() {
     Column(
         modifier = Modifier
-            .padding(top=80.dp).fillMaxWidth(),
+            .padding(top = 80.dp)
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -75,6 +75,15 @@ private fun CreateInfo() {
             style = MaterialTheme.typography.h4,
             text = "john77"
         )
+    }
+}
+
+@Composable
+fun TopBar() {
+    TopAppBar {
+        Text(
+            text = "Profile",
+            modifier = Modifier.padding(start = 10.dp))
     }
 }
 
