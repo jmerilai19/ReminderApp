@@ -1,13 +1,18 @@
 package com.jmerilai19.reminderapp.data
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 class ReminderViewModel(application: Application): AndroidViewModel(application) {
 
     val allReminders: LiveData<List<Reminder>>
+    var allUnseenReminders: LiveData<List<Reminder>>
+    var allSeenReminders: LiveData<List<Reminder>>
+
     private val repository: ReminderRepository
 
     init {
@@ -15,6 +20,8 @@ class ReminderViewModel(application: Application): AndroidViewModel(application)
         repository = ReminderRepository(reminderDao)
 
         allReminders = repository.getAllReminders()
+        allUnseenReminders = repository.getAllUnseenReminders()
+        allSeenReminders = repository.getAllSeenReminders()
     }
 
     fun addReminder(reminder: Reminder){
@@ -35,4 +42,10 @@ class ReminderViewModel(application: Application): AndroidViewModel(application)
         }
     }
 
+    fun updateSeenLists() {
+        viewModelScope.launch(Dispatchers.IO) {
+            allUnseenReminders = repository.getAllUnseenReminders()
+            allSeenReminders = repository.getAllSeenReminders()
+        }
+    }
 }

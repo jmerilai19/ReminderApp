@@ -1,15 +1,14 @@
 package com.jmerilai19.reminderapp.ui.home
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,14 +20,22 @@ import com.jmerilai19.reminderapp.data.ReminderViewModel
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
+import com.jmerilai19.reminderapp.data.Reminder
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun Home(navController: NavController) {
+fun Home(navController: NavController, context: Context) {
 
     val mReminderViewModel: ReminderViewModel = viewModel()
 
     val reminderList = mReminderViewModel.allReminders.observeAsState(listOf()).value // Get reminders
+    val reminderSeenList = mReminderViewModel.allSeenReminders.observeAsState(listOf()).value // Get reminders
+    val reminderUnseenList = mReminderViewModel.allUnseenReminders.observeAsState(listOf()).value // Get reminders
+
+    val tabs = listOf("Occurred", "Scheduled", "All")
+    var selectedTabIndex by remember { mutableStateOf(0) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -49,10 +56,44 @@ fun Home(navController: NavController) {
             }
         ) {
             //content area
-            LazyColumn(modifier = Modifier.fillMaxHeight(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(reminderList) {
+            ScrollableTabRow(
+                selectedTabIndex = selectedTabIndex,
+                edgePadding = 20.dp,
+                modifier = Modifier.padding(top = 4.dp),
+                backgroundColor = Color.Transparent,
+                contentColor = Color.Black,
+                divider = { },
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        text = {
+                            Text(
+                                text = title,
+                                fontSize = 16.sp,
+                                color = if (selectedTabIndex == index) Color.Black else Color.Gray
+                            )
+                        },
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index }
+                    )
+                }
+            }
+
+            var current: List<Reminder> = emptyList();
+            if (selectedTabIndex == 0) {
+                current = reminderSeenList
+            } else if (selectedTabIndex == 1) {
+                current = reminderUnseenList
+            } else if (selectedTabIndex == 2) {
+                current = reminderList
+            }
+
+            LazyColumn(modifier = Modifier
+                .fillMaxHeight()
+                .padding(top = 54.dp, bottom = 58.dp), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(current) {
                     reminder ->
-                    ReminderCard(navController = navController, id = reminder.id, message = reminder.message)
+                    ReminderCard(navController = navController, id = reminder.id, message = reminder.message, dateTime = reminder.reminder_datetime, type = reminder.type, notis = reminder.notification_on)
                 }
             }
         }
@@ -95,7 +136,7 @@ fun BottomBar(navController: NavController) {
 }
 
 @Composable
-fun ReminderCard(navController: NavController, id: Int, message: String) {
+fun ReminderCard(navController: NavController, id: Int, message: String, dateTime: LocalDateTime, type: Int, notis: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(size = 12.dp),
@@ -115,13 +156,29 @@ fun ReminderCard(navController: NavController, id: Int, message: String) {
                     fontSize = 22.sp,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = "University of Oulu",
-                    fontSize = 15.sp
-                )
+                if(type == 1 || type == 2) {
+                    Text(
+                        text = "University of Oulu",
+                        fontSize = 15.sp
+                    )
+                }
+                if(type == 0 || type == 2) {
+                    Text(
+                        text = DateTimeFormatter
+                            .ofPattern("dd MMM yyyy hh:mm")
+                            .format(dateTime),
+                        fontSize = 15.sp
+                    )
+                }
+                if (notis) {
+                    Text(
+                        text = "Notification enabled",
+                        fontSize = 15.sp,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
                 Text(
                     text = "- john77",
-                    fontStyle = FontStyle.Italic,
                     fontSize = 15.sp
                 )
             }
