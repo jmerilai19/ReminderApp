@@ -43,14 +43,14 @@ fun ReminderApp(
         composable(route = "edit_reminder/{id}/{message}",
                     arguments = listOf(
                         navArgument("id") {
-                        type = NavType.IntType
+                            type = NavType.IntType
                         },
                         navArgument("message") {
                             type = NavType.StringType
                         }
                     )
         ) { entry ->
-            EditReminder(id = entry.arguments!!.getInt("id"), message = entry.arguments!!.getString("message"), navController = appState.navController)
+            EditReminder(id = entry.arguments!!.getInt("id"), message = entry.arguments!!.getString("message").orEmpty(), navController = appState.navController)
         }
     }
 }

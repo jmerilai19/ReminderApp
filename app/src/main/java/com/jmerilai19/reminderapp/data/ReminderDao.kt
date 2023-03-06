@@ -28,6 +28,9 @@ interface ReminderDao {
     @Update
     fun update(reminder: Reminder)
 
+    @Query("UPDATE reminder_table SET message=:message WHERE id=:id")
+    fun updateMessageById(id: Int, message: String)
+
     @Delete
     fun delete(reminder: Reminder)
 

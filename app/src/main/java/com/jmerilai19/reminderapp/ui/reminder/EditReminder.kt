@@ -38,7 +38,7 @@ import com.jmerilai19.reminderapp.data.ReminderViewModel
 fun EditReminder(
     navController: NavController,
     id: Int,
-    message: String?
+    message: String
 ) {
     val viewModel: ReminderViewModel = viewModel()
 
@@ -50,7 +50,7 @@ fun EditReminder(
         ) {
 
             val context = LocalContext.current
-            val messageState = remember { mutableStateOf(message.orEmpty()) }
+            val messageState = remember { mutableStateOf(message) }
 
             // Speech-to-text stuff
             val permissionState = rememberPermissionState(
@@ -141,7 +141,7 @@ fun EditReminder(
                         onClick = {
                             val text = messageState.value
                             val myEntity = Reminder(id = id, message = text, location = "University of Oulu", creator_id = "john77")
-                            viewModel.updateReminder(myEntity)
+                            viewModel.updateMessageById(id, text)
                             Toast.makeText(context,"Updated reminder",Toast.LENGTH_SHORT).show();
                             navController.navigate("home")
                         },

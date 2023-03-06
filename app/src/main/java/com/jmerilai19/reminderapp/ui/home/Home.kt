@@ -93,7 +93,7 @@ fun Home(navController: NavController, context: Context) {
                 .padding(top = 54.dp, bottom = 58.dp), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(current) {
                     reminder ->
-                    ReminderCard(navController = navController, id = reminder.id, message = reminder.message, dateTime = reminder.reminder_datetime, type = reminder.type, notis = reminder.notification_on)
+                    ReminderCard(navController = navController, reminder = reminder)
                 }
             }
         }
@@ -136,7 +136,7 @@ fun BottomBar(navController: NavController) {
 }
 
 @Composable
-fun ReminderCard(navController: NavController, id: Int, message: String, dateTime: LocalDateTime, type: Int, notis: Boolean) {
+fun ReminderCard(navController: NavController, reminder: Reminder) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(size = 12.dp),
@@ -152,25 +152,32 @@ fun ReminderCard(navController: NavController, id: Int, message: String, dateTim
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = message,
+                    text = reminder.message,
                     fontSize = 22.sp,
                     overflow = TextOverflow.Ellipsis
                 )
-                if(type == 1 || type == 2) {
+                if(reminder.type == 1 || reminder.type == 2) { // "Location" or "Location and Time"
                     Text(
-                        text = "University of Oulu",
+                        text = reminder.location,
                         fontSize = 15.sp
                     )
                 }
-                if(type == 0 || type == 2) {
+                if(reminder.type == 0 || reminder.type == 2) { // "Time" or "Location and Time"
                     Text(
                         text = DateTimeFormatter
                             .ofPattern("dd MMM yyyy hh:mm")
-                            .format(dateTime),
+                            .format(reminder.reminder_datetime),
+                        fontSize = 15.sp
+                    )
+                } else if (reminder.type == 3) { // "Daily"
+                    Text(
+                        text = "Daily " + DateTimeFormatter
+                            .ofPattern("hh:mm")
+                            .format(reminder.reminder_datetime),
                         fontSize = 15.sp
                     )
                 }
-                if (notis) {
+                if (reminder.notification_on) {
                     Text(
                         text = "Notification enabled",
                         fontSize = 15.sp,
@@ -183,7 +190,10 @@ fun ReminderCard(navController: NavController, id: Int, message: String, dateTim
                 )
             }
             IconButton(
-                onClick = { navController.navigate("edit_reminder/$id/$message") }
+                onClick = {
+                    val id: Int = reminder.id
+                    val message: String = reminder.message
+                    navController.navigate("edit_reminder/$id/$message") }
             ) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit")
             }

@@ -61,13 +61,19 @@ fun Reminder(
                 mutableStateOf((LocalDate.now()))
             }
             var pickedTime by remember {                             // TIME
-                mutableStateOf((LocalTime.now()))
+                mutableStateOf((LocalTime.NOON))
             }
 
             // Dropdown stuff
             var expanded by remember { mutableStateOf(false) }
+            var expandedRepeat by remember { mutableStateOf(false) }
+            var expandedWeek by remember { mutableStateOf(false) }
             var selectedType by remember { mutableStateOf("Time") }
+            var repeat by remember { mutableStateOf("Once") }
+            var weekday by remember { mutableStateOf("Monday") }
             val types = listOf("Time", "Location", "Time and Location")
+            val typesRepeat = listOf("Once", "Daily")
+            val typesWeekday = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
             var textfieldSize by remember { mutableStateOf(Size.Zero)}
 
             val formattedDate by remember {
@@ -147,13 +153,15 @@ fun Reminder(
 
                 Spacer(modifier = Modifier.height(15.dp))
 
+                // Trigger field
                 Column {
-                    Row(modifier = Modifier.fillMaxWidth()
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
                         .fillMaxWidth()
                         .onGloballyPositioned { coordinates ->
                             //This value is used to assign to the DropDown the same width
                             textfieldSize = coordinates.size.toSize()
-                          },
+                        },
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
                         OutlinedTextField(
@@ -190,6 +198,51 @@ fun Reminder(
 
                 Spacer(modifier = Modifier.height(15.dp))
 
+                if (selectedType == "Time") {
+                    // Repeat dropdown
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coordinates ->
+                            //This value is used to assign to the DropDown the same width
+                            textfieldSize = coordinates.size.toSize()
+                        },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = repeat,
+                            onValueChange = { },
+                            enabled = false,
+                            label = { Text(text = "Repeat")},
+                            modifier = Modifier.weight(1f),
+                            textStyle = LocalTextStyle.current.copy(color = Color.Black),
+                            trailingIcon = {
+                                IconButton(onClick = { expandedRepeat = true }) {
+                                    Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
+                                }
+                            }
+                        )
+
+                        DropdownMenu(
+                            expanded = expandedRepeat,
+                            onDismissRequest = { expandedRepeat = false },
+                            modifier = Modifier
+                                .width(with(LocalDensity.current){textfieldSize.width.toDp()})
+                        ) {
+                            typesRepeat.forEach { item ->
+                                DropdownMenuItem(onClick = {
+                                    repeat = item
+                                    expandedRepeat = false
+                                }) {
+                                    Text(text = item)
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(15.dp))
+                }
+
                 if (selectedType == "Location" || selectedType == "Time and Location") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -218,13 +271,13 @@ fun Reminder(
                     Spacer(modifier = Modifier.height(15.dp))
                 }
 
-                if (selectedType == "Time" || selectedType == "Time and Location") {
+                if (selectedType == "Time and Location" || (selectedType == "Time" && repeat == "Once")) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Location field
+                        // Date field
                         OutlinedTextField(
                             value = formattedDate,
                             onValueChange = { },
@@ -244,13 +297,17 @@ fun Reminder(
                     }
 
                     Spacer(modifier = Modifier.height(15.dp))
+                }
 
+
+
+                if (selectedType == "Time" || selectedType == "Time and Location") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Location field
+                        // Time field
                         OutlinedTextField(
                             value = formattedTime,
                             onValueChange = { },
@@ -273,11 +330,7 @@ fun Reminder(
                         dialogState = dateDialogState,
                         buttons = {
                             positiveButton(text = "Ok") {
-                                Toast.makeText(
-                                    context,
-                                    "Clicked ok",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                /* */
                             }
                             negativeButton(text = "Cancel")
                         }
@@ -296,11 +349,7 @@ fun Reminder(
                         dialogState = timeDialogState,
                         buttons = {
                             positiveButton(text = "Ok") {
-                                Toast.makeText(
-                                    context,
-                                    "Clicked ok",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                /* */
                             }
                             negativeButton(text = "Cancel")
                         }
@@ -317,10 +366,13 @@ fun Reminder(
                     Spacer(modifier = Modifier.height(15.dp))
                 }
 
+                // Notification checkbox
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
                 ) {
                     Checkbox(
                         modifier = Modifier
@@ -339,13 +391,18 @@ fun Reminder(
                     enabled = checkMessageLength(messageState.value),
                     onClick = {
                         val text = messageState.value
-                        val dateTime: LocalDateTime  = pickedDate.atTime(pickedTime)
+                        var dateTime: LocalDateTime = pickedDate.atTime(pickedTime)
+                        var x: Boolean = false
 
                         var type = 0
                         if(selectedType == "Location") {
                             type = 1
                         } else if (selectedType == "Time and Location") {
                             type = 2
+                        } else if (selectedType == "Time" && repeat == "Daily") {
+                            type = 3
+                            x = true
+                            dateTime = LocalDate.now().atTime(pickedTime)
                         }
 
                         val myEntity = Reminder(id = 0,
@@ -360,7 +417,9 @@ fun Reminder(
 
                         viewModel.addReminder(myEntity)
 
-                        scheduleNotification(context, dateTime, messageState.value, isNotificationsChecked)
+                        Log.d("x", x.toString())
+
+                        scheduleNotification(context, dateTime, messageState.value, isNotificationsChecked, x)
 
                         Toast.makeText(context,"Reminder created",Toast.LENGTH_SHORT).show();
                         navController.navigate("home")
@@ -383,8 +442,14 @@ fun checkMessageLength(message: String): Boolean {
     return false
 }
 
-fun scheduleNotification(context: Context, dateTime: LocalDateTime, title: String, notis: Boolean) {
+fun scheduleNotification(context: Context, dateTime: LocalDateTime, title: String, notis: Boolean, daily: Boolean) {
     val currentTime = LocalDateTime.now()
+
+    if (daily) {
+        if (dateTime.isBefore(currentTime)) {
+            dateTime.plusDays(1)
+        }
+    }
     val duration = Duration.between(currentTime, dateTime)
     val delay = duration.toMillis()
 

@@ -21,7 +21,13 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
         var r: Reminder = ReminderDatabase.getDatabase(context = applicationContext).reminderDao().getByDateTime(inputData.getString("dt"))
 
-        r.reminder_seen = true
+
+
+        if (r.type == 3) { // If daily, set to happen the next day
+            r.reminder_datetime.plusDays(1)
+        } else { // if not repeating, set as seen
+            r.reminder_seen = true
+        }
 
         ReminderDatabase.getDatabase(context = applicationContext).reminderDao().update(r)
 

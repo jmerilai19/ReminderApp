@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.security.MessageDigest
 import java.time.LocalDateTime
 
 class ReminderViewModel(application: Application): AndroidViewModel(application) {
@@ -33,6 +34,12 @@ class ReminderViewModel(application: Application): AndroidViewModel(application)
     fun updateReminder(reminder: Reminder){
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateReminder(reminder)
+        }
+    }
+
+    fun updateMessageById(id: Int, message: String){
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updateMessageById(id, message)
         }
     }
 
