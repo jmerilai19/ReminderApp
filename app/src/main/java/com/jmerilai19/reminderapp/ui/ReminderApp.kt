@@ -12,9 +12,11 @@ import com.jmerilai19.reminderapp.data.ReminderViewModel
 import com.jmerilai19.reminderapp.rememberReminderAppState
 import com.jmerilai19.reminderapp.ui.home.Home
 import com.jmerilai19.reminderapp.ui.login.Login
+import com.jmerilai19.reminderapp.ui.maps.ReminderLocationLookUpMap
 import com.jmerilai19.reminderapp.ui.profile.Profile
 import com.jmerilai19.reminderapp.ui.reminder.Reminder
 import com.jmerilai19.reminderapp.ui.reminder.EditReminder
+import com.jmerilai19.reminderapp.ui.maps.ReminderLocationMap
 
 @Composable
 fun ReminderApp(
@@ -51,6 +53,12 @@ fun ReminderApp(
                     )
         ) { entry ->
             EditReminder(id = entry.arguments!!.getInt("id"), message = entry.arguments!!.getString("message").orEmpty(), navController = appState.navController)
+        }
+        composable(route = "map") {
+            ReminderLocationMap(navController = appState.navController, context = context)
+        }
+        composable(route = "lookUpMap") {
+            ReminderLocationLookUpMap(navController = appState.navController, context = context)
         }
     }
 }

@@ -41,17 +41,26 @@ fun Home(navController: NavController, context: Context) {
         Scaffold(
             bottomBar = { BottomBar(navController) },
             topBar = { TopBar()},
-
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navController.navigate("reminder") },
-                    contentColor = Color.Blue,
-                    modifier = Modifier.padding(all = 10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null
-                    )
+                Box( modifier = Modifier.fillMaxSize().padding(start = 30.dp)) {
+                    FloatingActionButton(
+                        onClick = { navController.navigate("reminder") },
+                        contentColor = Color.Blue,
+                        modifier = Modifier.padding(all = 10.dp).align(Alignment.BottomEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null
+                        )
+                    }
+
+                    FloatingActionButton(
+                        onClick = { navController.navigate("lookUpMap") },
+                        contentColor = Color.Blue,
+                        modifier = Modifier.padding(all = 10.dp).align(Alignment.BottomStart)
+                    ) {
+                        Text(text = "Map")
+                    }
                 }
             }
         ) {
@@ -158,7 +167,7 @@ fun ReminderCard(navController: NavController, reminder: Reminder) {
                 )
                 if(reminder.type == 1 || reminder.type == 2) { // "Location" or "Location and Time"
                     Text(
-                        text = reminder.location,
+                        text = "Lat: ${reminder.location_x}\nLng: ${reminder.location_y}",
                         fontSize = 15.sp
                     )
                 }

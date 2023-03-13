@@ -22,6 +22,9 @@ interface ReminderDao {
     @Query("SELECT * FROM reminder_table WHERE reminder_datetime == :dt")
     fun getByDateTime(dt: String?): Reminder
 
+    @Query("SELECT * FROM reminder_table WHERE location_x BETWEEN :minX AND :maxX AND location_y BETWEEN :minY AND :maxY AND reminder_seen == false")
+    fun getRemindersNearLocation(minX: Double, maxX: Double, minY: Double, maxY: Double): List<Reminder>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(reminder: Reminder)
 
@@ -30,6 +33,9 @@ interface ReminderDao {
 
     @Query("UPDATE reminder_table SET message=:message WHERE id=:id")
     fun updateMessageById(id: Int, message: String)
+
+    @Query("UPDATE reminder_table SET reminder_seen=true WHERE id=:id")
+    fun markAsSeen(id: Int)
 
     @Delete
     fun delete(reminder: Reminder)

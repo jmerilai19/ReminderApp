@@ -33,6 +33,7 @@ import com.jmerilai19.reminderapp.data.ReminderViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.model.LatLng
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
@@ -56,7 +57,7 @@ fun Reminder(
                 .systemBarsPadding()
         ) {
 
-            val messageState = remember { mutableStateOf("") } // MESSAGE
+            val messageState = remember { mutableStateOf(viewModel.msg) } // MESSAGE
             var pickedDate by remember {                             // DATE
                 mutableStateOf((LocalDate.now()))
             }
@@ -68,7 +69,7 @@ fun Reminder(
             var expanded by remember { mutableStateOf(false) }
             var expandedRepeat by remember { mutableStateOf(false) }
             var expandedWeek by remember { mutableStateOf(false) }
-            var selectedType by remember { mutableStateOf("Time") }
+            var selectedType by remember { mutableStateOf(viewModel.mode) }
             var repeat by remember { mutableStateOf("Once") }
             var weekday by remember { mutableStateOf("Monday") }
             val types = listOf("Time", "Location", "Time and Location")
@@ -95,6 +96,8 @@ fun Reminder(
             val timeDialogState = rememberMaterialDialogState()
 
             var isNotificationsChecked by remember { mutableStateOf(true) }
+
+            val latlng = navController.currentBackStackEntry?.savedStateHandle?.getLiveData<LatLng>("location_data")?.value
 
             // Speech-to-text stuff
             val permissionState = rememberPermissionState(
@@ -135,7 +138,9 @@ fun Reminder(
                 // Message field
                 OutlinedTextField(
                     value = messageState.value,
-                    onValueChange = { messageState.value = it },
+                    onValueChange = {   messageState.value = it
+                                        viewModel.msg = it
+                                    },
                     label = { Text(text = "Message")},
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
@@ -188,6 +193,7 @@ fun Reminder(
                                 DropdownMenuItem(onClick = {
                                     selectedType = item
                                     expanded = false
+                                    viewModel.mode = selectedType
                                 }) {
                                     Text(text = item)
                                 }
@@ -250,17 +256,28 @@ fun Reminder(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Location field
-                        OutlinedTextField(
-                            value = "University of Oulu",
-                            onValueChange = { },
-                            enabled = false,
-                            label = { Text(text = "Location") },
-                            modifier = Modifier.weight(1f),
-                            textStyle = LocalTextStyle.current.copy(color = Color.Black)
-                        )
+                        if (latlng == null) {
+                            OutlinedTextField(
+                                value = "",
+                                onValueChange = { },
+                                enabled = false,
+                                label = { Text(text = "Location") },
+                                modifier = Modifier.weight(1f),
+                                textStyle = LocalTextStyle.current.copy(color = Color.Black)
+                            )
+                        } else {
+                            OutlinedTextField(
+                                value = "Lat: ${latlng.latitude}, \nLng: ${latlng.longitude}",
+                                onValueChange = { },
+                                enabled = false,
+                                label = { Text(text = "Location") },
+                                modifier = Modifier.weight(1f),
+                                textStyle = LocalTextStyle.current.copy(color = Color.Black)
+                            )
+                        }
                         Button(
                             onClick = {
-
+                                navController.navigate("map")
                             },
                             modifier = Modifier.padding(start = 8.dp, top = 4.dp)
                         ) {
@@ -393,6 +410,8 @@ fun Reminder(
                         val text = messageState.value
                         var dateTime: LocalDateTime = pickedDate.atTime(pickedTime)
                         var x: Boolean = false
+                        var lat: Double = 0.0
+                        var lng: Double = 0.0
 
                         var type = 0
                         if(selectedType == "Location") {
@@ -405,10 +424,17 @@ fun Reminder(
                             dateTime = LocalDate.now().atTime(pickedTime)
                         }
 
+                        if (selectedType == "Location" || selectedType == "Time and Location") {
+                            lat = latlng!!.latitude ?: 0.0
+                            lng = latlng!!.longitude ?: 0.0
+                        }
+
                         val myEntity = Reminder(id = 0,
                             message = text,
                             location = "University of Oulu",
                             creator_id = "john77",
+                            location_x = lat,
+                            location_y = lng,
                             reminder_datetime = dateTime,
                             creation_time = LocalDateTime.now(),
                             type = type,
@@ -417,9 +443,10 @@ fun Reminder(
 
                         viewModel.addReminder(myEntity)
 
-                        Log.d("x", x.toString())
+                        if (type == 0 || type == 2 || type == 3) {
+                            scheduleNotification(context, dateTime, messageState.value, isNotificationsChecked, x)
+                        }
 
-                        scheduleNotification(context, dateTime, messageState.value, isNotificationsChecked, x)
 
                         Toast.makeText(context,"Reminder created",Toast.LENGTH_SHORT).show();
                         navController.navigate("home")

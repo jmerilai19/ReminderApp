@@ -12,8 +12,8 @@ data class Reminder (
     @ColumnInfo(name = "message") var message: String = "",
     val type: Int = 0, // 0 = one time, 1 = location, 2 = both, 3 = time daily, 4 = time weekly
     var location: String = "",
-    var location_x: String = "",
-    var location_y: String = "",
+    @ColumnInfo(name = "location_x") var location_x: Double = 0.0,
+    @ColumnInfo(name = "location_y") var location_y: Double = 0.0,
     var weekday: String = "",
     @ColumnInfo(name = "reminder_datetime") var reminder_datetime: LocalDateTime = LocalDateTime.MIN,
     val creation_time: LocalDateTime = LocalDateTime.MIN,
